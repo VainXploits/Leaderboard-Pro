@@ -57,3 +57,17 @@ def github_user_update(self):
                 stars = stars + response[i]["stargazers_count"]
             gh_user.stars = stars
             gh_user.save()
+
+@app.task(bind=True)
+def openlakeContributor_update(self):
+    from leaderboard.models import openlakeContributor
+    from bs4 import BeautifulSoup
+
+    ol_contributors = openlakeContributor.objects.all()
+    for i, ol_contributor in enumerate(ol_contributors):
+        if ol_contributor.is_outdated:
+            url = "https://api.github.com/repos/OpenLake/Leaderboard-Pro/contributors{}".format(ol_contributor.username)
+            page = requests.get(url)
+            data_ol = BeautifulSoup(page.text, "html.parser")
+            a = data_ol.find("div", class_="user-contributions")
+            b = a.find()
